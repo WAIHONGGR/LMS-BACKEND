@@ -16,6 +16,7 @@ import com.tarumt.lms.service.UserStatusChangeLogService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,50 +45,44 @@ public class AdminInstructorManagementService {
     @Value("${supabase.bucket.name}")
     private String bucketName;
 
-    // ================================
-    // GET All Instructors (Basic Info Only - For Table View)
-    // ================================
     @Transactional(readOnly = true)
     public List<InstructorListViewDTO> getAllInstructors(String status, String search) {
         log.info("Fetching all instructors (basic info): status={}, search={}", status, search);
 
-        List<Instructor> instructors;
+        Sort sortByRegisteredDesc = Sort.by(Sort.Direction.DESC, "registeredDate");
+        AccountStatus filterStatus = parseStatus(status);
 
-        // Filter by status if provided and not "all"
-        AccountStatus filterStatus = null;
-        if (status != null && !status.trim().isEmpty() && !status.equalsIgnoreCase("all")) {
-            try {
-                filterStatus = AccountStatus.valueOf(status.trim().toUpperCase());
-            } catch (IllegalArgumentException e) {
-                log.warn("Invalid status filter provided: {}. Returning empty list.", status);
-                return Collections.emptyList();
-            }
-        }
+        List<Instructor> instructors = (filterStatus != null)
+                ? instructorRepository.findByStatus(filterStatus, sortByRegisteredDesc)
+                : instructorRepository.findAll(sortByRegisteredDesc);
 
-        // Fetch instructors based on status filter
-        if (filterStatus != null) {
-            instructors = instructorRepository.findByStatus(filterStatus);
-        } else {
-            instructors = instructorRepository.findAll();
-        }
-
-        // Apply search filter if provided
         if (search != null && !search.trim().isEmpty()) {
-            String searchLower = search.toLowerCase().trim();
+            String searchLower = search.trim().toLowerCase();
             instructors = instructors.stream()
-                    .filter(i ->
-                            (i.getName() != null && i.getName().toLowerCase().contains(searchLower)) ||
-                                    (i.getEmail() != null && i.getEmail().toLowerCase().contains(searchLower))
-                    )
+                    .filter(i -> contains(i.getName(), searchLower) || contains(i.getEmail(), searchLower))
                     .collect(Collectors.toList());
         }
 
-        // Convert to basic DTO (ONLY 5 fields: instructorId, name, email, status, registeredDate)
         return instructors.stream()
                 .map(this::convertToListViewDTO)
                 .collect(Collectors.toList());
     }
 
+    private AccountStatus parseStatus(String status) {
+        if (status == null || status.trim().isEmpty() || status.equalsIgnoreCase("all")) {
+            return null;
+        }
+        try {
+            return AccountStatus.valueOf(status.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            log.warn("Invalid status filter provided: {}. Returning empty list.", status);
+            return null;
+        }
+    }
+
+    private boolean contains(String value, String needle) {
+        return value != null && value.toLowerCase().contains(needle);
+    }
 
     // ================================
     // GET Instructor Details with Certificates (Admin View - For View Details Modal)

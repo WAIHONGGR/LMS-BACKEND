@@ -13,7 +13,6 @@ import com.tarumt.lms.service.user.StudentService;
 import com.tarumt.lms.service.user.SuperAdminService;
 import com.tarumt.lms.utility.EmailUtils;
 import com.tarumt.lms.utility.TokenVerifierUtils;
-import jakarta.validation.constraints.Email;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

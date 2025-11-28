@@ -9,6 +9,7 @@ import com.tarumt.lms.repo.UserStatusChangeLogRepository;
 import com.tarumt.lms.model.UserStatusChangeLog;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,19 +29,19 @@ public class AdminStudentManagementService {
     // GET ALL STUDENTS (OPTIONAL STATUS FILTER & SEARCH)
     // =====================================================
     public List<Student> getAllStudents(AccountStatus status, String search) {
-        if (status != null && search != null && !search.isBlank()) {
-            // Filter by status and search
-            return studentRepository.findByStatusAndNameOrEmailContainingIgnoreCase(status, search);
+        Sort sortByJoinDateDesc = Sort.by(Sort.Direction.DESC, "registeredDate");
+        boolean hasSearch = search != null && !search.isBlank();
+
+        if (status != null && hasSearch) {
+            return studentRepository
+                    .findByStatusAndNameOrEmailContainingIgnoreCase(status, search, sortByJoinDateDesc);
         } else if (status != null) {
-            // Filter by status only
-            return studentRepository.findByStatus(status);
-        } else if (search != null && !search.isBlank()) {
-            // Search only
-            return studentRepository.findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase(search, search);
-        } else {
-            // Get all students
-            return studentRepository.findAll();
+            return studentRepository.findByStatus(status, sortByJoinDateDesc);
+        } else if (hasSearch) {
+            return studentRepository
+                    .findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase(search, search, sortByJoinDateDesc);
         }
+        return studentRepository.findAll(sortByJoinDateDesc);
     }
 
     // =====================================================

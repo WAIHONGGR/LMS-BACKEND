@@ -2,6 +2,7 @@ package com.tarumt.lms.repo;
 
 import com.tarumt.lms.model.Instructor;
 import com.tarumt.lms.model.enums.AccountStatus;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -20,7 +21,7 @@ public interface InstructorRepository extends JpaRepository<Instructor, Long> {
     boolean existsByEmail(String email);
 
     // Add this new method for filtering by status
-    List<Instructor> findByStatus(AccountStatus status);
+    List<Instructor> findByStatus(AccountStatus status, Sort sort);
 
     // Find by email, excluding INACTIVE
     Optional<Instructor> findByEmailAndStatusNot(String email, AccountStatus status);

@@ -67,7 +67,6 @@ public class StudentService {
                 });
     }
 
-
     @Transactional
     public Student create(String email, String name, UUID supabaseUserId) {
         log.info("Creating new student: email={}, supabaseUserId={}", email, supabaseUserId);
@@ -85,8 +84,7 @@ public class StudentService {
         log.info("Fetching active student profile for studentId={}", studentId);
         return studentRepository.findByStudentIdAndStatus(studentId, AccountStatus.ACTIVE)
                 .map(student -> {
-                    log.info("Active student found: studentId={}, email={}",
-                            student.getStudentId(), student.getEmail());
+                    log.info("Active student found: studentId={}, email={}", student.getStudentId(), student.getEmail());
                     return student;
                 })
                 .or(() -> {
