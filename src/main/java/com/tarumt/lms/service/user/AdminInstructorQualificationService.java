@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -157,6 +158,43 @@ public class AdminInstructorQualificationService {
             }
         }
 
+    }
+
+    // ================================
+    // GET Qualification History (All processed qualifications)
+    // ================================
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> getQualificationHistory() {
+        log.info("Fetching qualification history (all processed qualifications)");
+
+        // Get all qualifications that have been processed by admin (madeByAdmin is not null)
+        List<InstructorQualification> processedQualifications =
+                instructorQualificationRepository.findAllProcessedQualifications();
+
+        log.info("Found {} processed qualifications", processedQualifications.size());
+
+        // Transform to history log format
+        return processedQualifications.stream()
+                .map(qual -> {
+                    Map<String, Object> logEntry = new java.util.HashMap<>();
+                    logEntry.put("logId", qual.getId()); // Use qualification ID as log ID
+                    logEntry.put("qualificationId", qual.getId());
+                    logEntry.put("userId", qual.getInstructor() != null ? qual.getInstructor().getInstructorId() : null);
+                    logEntry.put("instructorId", qual.getInstructor() != null ? qual.getInstructor().getInstructorId() : null);
+                    logEntry.put("instructorName", qual.getInstructor() != null ? qual.getInstructor().getName() : null);
+                    logEntry.put("instructorEmail", qual.getInstructor() != null ? qual.getInstructor().getEmail() : null);
+                    logEntry.put("oldStatus", "PENDING"); // Always PENDING before admin action
+                    logEntry.put("newStatus", qual.getStatus() != null ? qual.getStatus().toString() : null);
+                    logEntry.put("qualificationLevel", qual.getQualificationLevel());
+                    logEntry.put("fieldOfStudy", qual.getFieldOfStudy());
+                    logEntry.put("changedByAdminId", qual.getMadeByAdmin() != null ? qual.getMadeByAdmin().getAdminId() : null);
+                    logEntry.put("changedByAdminName", qual.getMadeByAdmin() != null ? qual.getMadeByAdmin().getName() : null);
+                    logEntry.put("reason", qual.getRejectionReason()); // Only set if REJECTED
+                    logEntry.put("changedAt", qual.getMadeAt() != null ? qual.getMadeAt().toInstant() : null);
+                    logEntry.put("submittedAt", qual.getSubmittedAt() != null ? qual.getSubmittedAt().toInstant() : null);
+                    return logEntry;
+                })
+                .collect(Collectors.toList());
     }
 
     // ================================

@@ -38,5 +38,27 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
             "WHERE LOWER(c.title) LIKE LOWER(CONCAT('%', :title, '%')) " +
             "AND c.status = 'Active' AND c.instructor IS NOT NULL AND c.courseCategory IS NOT NULL")
     List<Course> findByTitleContainingIgnoreCaseAndComplete(@Param("title") String title);
+
+    // Admin Course Management - Find by status and search (title or description)
+    @Query("SELECT c FROM Course c LEFT JOIN FETCH c.instructor LEFT JOIN FETCH c.courseCategory " +
+            "WHERE c.status = :status " +
+            "AND (LOWER(c.title) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "OR LOWER(c.description) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+            "ORDER BY c.createDate DESC")
+    List<Course> findByStatusAndTitleOrDescriptionContainingIgnoreCase(
+            @Param("status") String status,
+            @Param("search") String search);
+
+    // Admin Course Management - Find by title or description (search only)
+    @Query("SELECT c FROM Course c LEFT JOIN FETCH c.instructor LEFT JOIN FETCH c.courseCategory " +
+            "WHERE (LOWER(c.title) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "OR LOWER(c.description) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+            "ORDER BY c.createDate DESC")
+    List<Course> findByTitleOrDescriptionContainingIgnoreCase(@Param("search") String search);
+
+    // Admin Course Management - Find all courses ordered by create date
+    @Query("SELECT c FROM Course c LEFT JOIN FETCH c.instructor LEFT JOIN FETCH c.courseCategory " +
+            "ORDER BY c.createDate DESC")
+    List<Course> findAllOrderByCreateDateDesc();
 }
 

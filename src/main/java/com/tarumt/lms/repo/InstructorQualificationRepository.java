@@ -25,4 +25,8 @@ public interface InstructorQualificationRepository extends JpaRepository<Instruc
     List<InstructorQualification> findByStatusWithInstructor(@Param("status") QualificationStatus status);
 
     List<InstructorQualification> findByInstructorOrderBySubmittedAtDesc(Instructor instructor);
+
+    // Find all qualifications that have been processed by admin (history records)
+    @Query("SELECT q FROM InstructorQualification q JOIN FETCH q.instructor JOIN FETCH q.madeByAdmin WHERE q.madeByAdmin IS NOT NULL ORDER BY q.madeAt DESC")
+    List<InstructorQualification> findAllProcessedQualifications();
 }

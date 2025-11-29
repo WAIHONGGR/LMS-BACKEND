@@ -258,25 +258,25 @@ public class CourseService {
 //
 //        return updatedCourse;
 //    }
-//
-//    @Transactional
-//    public void deleteCourse(Long courseId, Long instructorId) {
-//        log.info("Deleting course for courseId={}, instructorId={}", courseId, instructorId);
-//
-//        Course course = courseRepository.findByCourseId(courseId)
-//                .orElseThrow(() -> {
-//                    log.warn("Course not found with ID {}", courseId);
-//                    return new RuntimeException("Course not found with ID " + courseId);
-//                });
-//
-//        // Verify instructor ownership
-//        if (course.getInstructor() == null || !course.getInstructor().getInstructorId().equals(instructorId)) {
-//            log.warn("Course {} does not belong to instructor {}", courseId, instructorId);
-//            throw new RuntimeException("Course does not belong to this instructor");
-//        }
-//
-//        courseRepository.delete(course);
-//        log.info("Course deleted successfully: id={}", courseId);
-//    }
+
+    @Transactional
+    public void deleteCourse(Long courseId, Long instructorId) {
+        log.info("Deleting course for courseId={}, instructorId={}", courseId, instructorId);
+
+        Course course = courseRepository.findByCourseId(courseId)
+                .orElseThrow(() -> {
+                    log.warn("Course not found with ID {}", courseId);
+                    return new RuntimeException("Course not found with ID " + courseId);
+                });
+
+        // Verify instructor ownership
+        if (course.getInstructor() == null || !course.getInstructor().getInstructorId().equals(instructorId)) {
+            log.warn("Course {} does not belong to instructor {}", courseId, instructorId);
+            throw new RuntimeException("Course does not belong to this instructor");
+        }
+
+        courseRepository.delete(course);
+        log.info("Course deleted successfully: id={}", courseId);
+    }
 }
 

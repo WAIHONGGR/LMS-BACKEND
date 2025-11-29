@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -196,6 +197,44 @@ public class AdminInstructorQualificationController {
 
         } catch (Exception e) {
             log.error("Error rejecting qualification qualificationId={}", qualificationId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(false, "Internal server error", null));
+        }
+    }
+
+    // ================================
+    // GET Qualification History (All processed qualifications)
+    // ================================
+    @GetMapping("/requirements/history")
+    public ResponseEntity<ApiResponse<?>> getQualificationHistory(
+            @RequestHeader("Authorization") String authorizationHeader) {
+
+        log.info("Received request for qualification history");
+
+        try {
+            Map<String, Object> claims = tokenVerifierUtils.validateTokenAndGetClaims(authorizationHeader, true);
+            if (claims == null) {
+                log.warn("Unauthorized request for qualification history");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new ApiResponse<>(false, "Invalid token", null));
+            }
+
+            String email = (String) claims.get("email");
+            Optional<Admin> adminOpt = adminService.getActiveByEmail(email);
+
+            if (adminOpt.isEmpty()) {
+                log.warn("Admin not found for email={} when fetching qualification history", email);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new ApiResponse<>(false, "Admin privileges required", null));
+            }
+
+            List<Map<String, Object>> history = adminInstructorQualificationService.getQualificationHistory();
+
+            log.info("Successfully fetched {} qualification history records", history.size());
+            return ResponseEntity.ok(new ApiResponse<>(true, "Qualification history fetched successfully", history));
+
+        } catch (Exception e) {
+            log.error("Error fetching qualification history", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse<>(false, "Internal server error", null));
         }
